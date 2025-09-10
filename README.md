@@ -1,4 +1,4 @@
--- Roblox Lua Script: Auto Teleport com delay de 40ms (0.04s)
+-- Roblox Lua Script: Teleport Panel + Auto Teleport 3 "cliques" por posição
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -6,7 +6,6 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- GUI principal
 local gui = Instance.new("ScreenGui")
 gui.Name = "TeleportGUI"
 gui.ResetOnSpawn = false
@@ -30,11 +29,11 @@ local teleports = {
     {name = "Condenada 11", pos = Vector3.new(4192.87, 21.01, -6990.53)}
 }
 
--- Painel principal
+-- Painel
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,260,0,60)
-frame.Position = UDim2.new(0.5,-130,0.7,0)
-frame.AnchorPoint = Vector2.new(0.5,0)
+frame.Size = UDim2.new(0, 260, 0, 60)
+frame.Position = UDim2.new(0.5, -130, 0.7, 0)
+frame.AnchorPoint = Vector2.new(0.5, 0)
 frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 frame.BackgroundTransparency = 0.15
 frame.BorderSizePixel = 0
@@ -42,9 +41,8 @@ frame.ClipsDescendants = true
 frame.Parent = gui
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
 
--- Título
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,-50,0,28)
+title.Size = UDim2.new(1, -50, 0, 28)
 title.Position = UDim2.new(0,6,0,6)
 title.BackgroundTransparency = 1
 title.Text = "Teleporte — Escolha"
@@ -53,7 +51,6 @@ title.TextColor3 = Color3.new(1,1,1)
 title.Font = Enum.Font.SourceSansSemibold
 title.Parent = frame
 
--- Botão abrir/fechar
 local openBtn = Instance.new("TextButton")
 openBtn.Size = UDim2.new(0,36,0,36)
 openBtn.Position = UDim2.new(1,-42,0,12)
@@ -77,11 +74,9 @@ listFrame.ScrollBarThickness = 6
 listFrame.Visible = false
 listFrame.Parent = frame
 listFrame.CanvasSize = UDim2.new(0,0,0,#teleports*46 + 50)
-local layout = Instance.new("UIListLayout", listFrame)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Padding = UDim.new(0,6)
+Instance.new("UIListLayout", listFrame).SortOrder = Enum.SortOrder.LayoutOrder
 
--- Teleporte (com cadeira)
+-- Função teleporte com cadeira
 local function teleportTo(pos)
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
@@ -94,10 +89,26 @@ local function teleportTo(pos)
     end
 end
 
--- Auto Teleport
+-- Variável Auto Teleport
 local autoTeleporting = false
-local autoDelay = 0.04 -- 40ms
+local autoDelay = 1 -- segundos entre cliques
 
+-- Criar botões
+for i, info in ipairs(teleports) do
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1,-12,0,40)
+    b.BackgroundTransparency = 0.08
+    b.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    b.BorderSizePixel = 0
+    b.Text = info.name
+    b.Font = Enum.Font.SourceSans
+    b.TextSize = 18
+    b.TextColor3 = Color3.new(1,1,1)
+    b.Parent = listFrame
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+end
+
+-- Botão Auto Teleport
 local autoBtn = Instance.new("TextButton")
 autoBtn.Size = UDim2.new(1,-12,0,40)
 autoBtn.Position = UDim2.new(0,6,0,(#teleports*46)+10)
@@ -111,6 +122,7 @@ autoBtn.TextColor3 = Color3.new(1,1,1)
 autoBtn.Parent = listFrame
 Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0,8)
 
+-- Função Auto Teleport 3 cliques por posição
 autoBtn.MouseButton1Click:Connect(function()
     autoTeleporting = not autoTeleporting
     autoBtn.Text = "Auto Teleport: "..(autoTeleporting and "ON" or "OFF")
@@ -118,9 +130,11 @@ autoBtn.MouseButton1Click:Connect(function()
         task.spawn(function()
             while autoTeleporting do
                 for _, info in ipairs(teleports) do
-                    if not autoTeleporting then break end
-                    teleportTo(info.pos)
-                    task.wait(autoDelay)
+                    for click = 1,3 do
+                        if not autoTeleporting then break end
+                        teleportTo(info.pos)
+                        task.wait(autoDelay)
+                    end
                 end
             end
         end)
@@ -159,8 +173,8 @@ frame.InputBegan:Connect(function(input)
         dragStart = input.Position
         startPos = frame.Position
         input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End or input.UserInputState == Enum.UserInputState.Cancel then
-                dragging = false
+            if input.UserInputState==Enum.UserInputState.End or input.UserInputState==Enum.UserInputState.Cancel then
+                dragging=false
             end
         end)
     end
